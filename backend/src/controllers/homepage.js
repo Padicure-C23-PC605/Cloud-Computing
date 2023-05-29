@@ -1,6 +1,6 @@
 //blm fix
 
-import {pool} from "../config/database.js"
+import {db} from "../config/database.js"
 
 export const getPadi = async (req,res)=>{
     try{
@@ -15,10 +15,10 @@ export const getPadi = async (req,res)=>{
 }
 
 export const detail = async (req,res)=>{
-    pool.getConnection((err, connection) => {
+    db.getConnection((err, connection) => {
         if(err) throw err
         console.log('connected as id ' + connection.threadId)
-        connection.query('SELECT * from menu WHERE id=?', [req.params.id], (err, rows) => {
+        connection.query('SELECT * from item WHERE id=?', [req.params.id], (err, rows) => {
             connection.release() // return the connection to pool
 
             if (!err) {
