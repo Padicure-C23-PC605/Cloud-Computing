@@ -1,65 +1,80 @@
-import multer from "multer";
-import path from "path";
-import fs from "fs";
-import { Storage } from "@google-cloud/storage";
+import { format } from "util";
+import { uploadGoogleStorage, storage } from "../middlewares/multer.js";
 
-const pathKey = path.resolve('./gcloud.json')
+//TODO : ganti nama bucket
+const bucket = storage.bucket("contoh_padicure");
 
-// TODO: Sesuaikan konfigurasi Storage
-const gcs = new Storage({
-    projectId: 'radiant-voyage-387409',
-    keyFilename: pathKey
-})
-
-// TODO: Tambahkan nama bucket yang digunakan
-const bucketName = 'contoh_padicure'
-const bucket = gcs.bucket(bucketName)
-
-function getPublicUrl(filename) {
-    return 'https://storage.googleapis.com/' + bucketName + '/' + filename;
-}
-
-export let ImgUpload = {}
-
-ImgUpload.uploadToGcs = (req, res, next) => {
-    if (!req.file) return next()
-
-    const gcsname = dateFormat(new Date(), "yyyymmdd-HHMMss")
-    const file = bucket.file(gcsname)
-
-    const stream = file.createWriteStream({
-        metadata: {
-            contentType: req.file.mimetype
+export const upload = async (req, res) => {
+    try {
+        await uploadGoogleStorage(req, res);
+        if (!req.file) {
+            return res.status(400).send({ message: "Please upload a file!" });
         }
-    })
+        const blob = bucket.file(req.file.originalname);
+        const blobStream = blob.createWriteStream({
+            resumable: false,
+        });
+        blobStream.on("error", (err) => {
+            res.status(500).send({ message: err.message });
+        });
 
-    stream.on('error', (err) => {
-        req.file.cloudStorageError = err
-        next(err)
-    })
+        blobStream.on("finish", async (data) => {
+            const publicUrl = format(
+                `https://storage.googleapis.com/${bucket.name}/${blob.name}`
+            );
 
-    stream.on('finish', () => {
-        req.file.cloudStorageObject = gcsname
-        req.file.cloudStoragePublicUrl = getPublicUrl(gcsname)
-        next()
-    })
+            try {
+                await bucket.file(req.file.originalname).makePublic();
+            } catch {
+                return res.status(500).send({
+                    message:
+                        `Uploaded the file successfully: ${req.file.originalname}, but public access is denied!`,
+                    url: publicUrl,
+                });
+            }
+            res.status(200).send({
+                message: "Uploaded the file successfully: " + req.file.originalname,
+                url: publicUrl,
+            });
+        });
+        blobStream.end(req.file.buffer);
+    } catch (err) {
+        res.status(500).send({
+            message: `Could not upload the file: ${req.file.originalname}. ${err}`,
+        });
+    }
+};
 
-    stream.end(req.file.buffer)
-}
+export const getListFiles = async (req, res) => {
+    try {
+        const [files] = await bucket.getFiles();
+        let fileInfos = [];
 
+        files.forEach((file) => {
+            fileInfos.push({
+                name: file.name,
+                url: file.metadata.mediaLink,
+            });
+        });
 
+        res.status(200).send(fileInfos);
+    } catch (err) {
+        console.log(err);
 
-export const uploadGoogleStorage = multer({
-  storage: multer.MemoryStorage,
-  fileSize: 5 * 1024 * 1024
-})
+        res.status(500).send({
+            message: "Unable to read list of files!",
+        });
+    }
+};
 
-export const uploadImage = async (req, res) => {
-  const data = req.body
-  if (req.file && req.file.cloudStoragePublicUrl) {
-      data.imageUrl = req.file.cloudStoragePublicUrl
-  }
+export const download = async (req, res) => {
+    try {
+        const [metaData] = await bucket.file(req.params.name).getMetadata();
+        res.redirect(metaData.mediaLink);
 
-  res.send(data)
-}
-
+    } catch (err) {
+        res.status(500).send({
+            message: "Could not download the file. " + err,
+        });
+    }
+};
