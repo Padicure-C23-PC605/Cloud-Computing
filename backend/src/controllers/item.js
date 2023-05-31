@@ -1,8 +1,6 @@
 import { format } from "util";
-import { uploadGoogleStorage, storage } from "../middlewares/multer.js";
-
-//TODO : ganti nama bucket
-const bucket = storage.bucket("contoh_padicure");
+import { uploadGoogleStorage, bucket } from "../middlewares/multer.js";
+import uploadFromUser from "../models/upload.js";
 
 export const upload = async (req, res) => {
     try {
@@ -22,13 +20,15 @@ export const upload = async (req, res) => {
             const publicUrl = format(
                 `https://storage.googleapis.com/${bucket.name}/${blob.name}`
             );
-
+            await uploadFromUser.create({
+                image: publicUrl,
+            });
             try {
                 await bucket.file(req.file.originalname).makePublic();
             } catch {
                 return res.status(500).send({
                     message:
-                        `Uploaded the file successfully: ${req.file.originalname}, but public access is denied!`,
+                        `Uploaded the file successfully, but public access is denied!`,
                     url: publicUrl,
                 });
             }
@@ -40,8 +40,21 @@ export const upload = async (req, res) => {
         blobStream.end(req.file.buffer);
     } catch (err) {
         res.status(500).send({
-            message: `Could not upload the file: ${req.file.originalname}. ${err}`,
+            message: `Could not upload the file ${err}`,
         });
+    }
+};
+
+export const getUploadFiles = async(req, res) =>{
+    try {
+        const response = await uploadFromUser.findAll({
+            attributes: ["image"],
+        });
+        res.json(response);
+    }
+    catch (error) {
+        console.log(error);
+        res.status(500).json({ message: "Internal Server Error" });
     }
 };
 
@@ -63,18 +76,6 @@ export const getListFiles = async (req, res) => {
 
         res.status(500).send({
             message: "Unable to read list of files!",
-        });
-    }
-};
-
-export const download = async (req, res) => {
-    try {
-        const [metaData] = await bucket.file(req.params.name).getMetadata();
-        res.redirect(metaData.mediaLink);
-
-    } catch (err) {
-        res.status(500).send({
-            message: "Could not download the file. " + err,
         });
     }
 };
