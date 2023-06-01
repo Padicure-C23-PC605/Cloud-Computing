@@ -1,7 +1,7 @@
 import multer from "multer";
 import util from "util";
-import path from "path";
 import { Storage } from "@google-cloud/storage";
+
 
 export const cloudStorage = new Storage({
     projectId: "radiant-voyage-387409",
@@ -10,6 +10,8 @@ export const cloudStorage = new Storage({
 
 //TODO : ganti nama bucket
 export const bucket = cloudStorage.bucket("contoh_padicure");
+export const fileBlob = bucket.file('/public/uploads');
+
 
 const processFile = multer({
     storage: multer.memoryStorage(),
@@ -17,6 +19,9 @@ const processFile = multer({
 }).single("file");
 
 export const uploadGoogleStorage = util.promisify(processFile);
+
+
+
 
 
 

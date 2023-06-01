@@ -5,7 +5,7 @@ import item from "../models/homepage.js";
 export const getPadi = async (req, res) => {
     try {
         const response = await item.findAll({
-            attributes: ["id","name","image"],
+            attributes: ["id", "name", "image"],
         });
         res.json(response);
     }
@@ -18,7 +18,7 @@ export const getPadi = async (req, res) => {
 export const detail = async (req, res) => {
     try {
         const response = await item.findOne({
-            attributes: ["name","image","description","howtocure"],
+            attributes: ["name", "image", "description", "howtocure"],
             where: {
                 id: req.params.id
             }
@@ -56,3 +56,4 @@ export const history = async (req, res) => {
         res.status(500).send(`Error, ${error}`);
     }
 };
+

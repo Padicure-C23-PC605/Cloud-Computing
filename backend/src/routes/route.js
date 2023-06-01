@@ -1,6 +1,6 @@
 import express from "express";
 import {getPadi, detail, history} from "../controllers/homepage.js"
-import {upload, getListFiles, getUploadFiles} from "../controllers/item.js"
+import {upload, getUploadFiles} from "../controllers/upload.js"
 
 
 const router = express.Router();

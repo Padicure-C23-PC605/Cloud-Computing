@@ -3,13 +3,15 @@ import { uploadGoogleStorage, bucket } from "../middlewares/multer.js";
 import uploadFromUser from "../models/upload.js";
 
 export const upload = async (req, res) => {
-    try {
+    try {   
         await uploadGoogleStorage(req, res);
+        
         if (!req.file) {
             return res.status(400).send({ message: "Please upload a file!" });
         }
-        const blob = bucket.file(req.file.originalname);
+        const blob = bucket.file("public/uploads/" + req.file.originalname.replace("",  `padicure-${Date.now()}-`));
         const blobStream = blob.createWriteStream({
+            metadata:{contentType: req.file.mimetype} ,
             resumable: false,
         });
         blobStream.on("error", (err) => {
@@ -21,29 +23,31 @@ export const upload = async (req, res) => {
                 `https://storage.googleapis.com/${bucket.name}/${blob.name}`
             );
             await uploadFromUser.create({
+                //butuh user id dari firebase auth
                 image: publicUrl,
             });
-            try {
-                await bucket.file(req.file.originalname).makePublic();
-            } catch {
-                return res.status(500).send({
-                    message:
-                        `Uploaded the file successfully, but public access is denied!`,
-                    url: publicUrl,
-                });
-            }
+            
             res.status(200).send({
-                message: "Uploaded the file successfully: " + req.file.originalname,
+                message: "Uploaded the file successfully: " + req.file.originalname.replace("",  `padicure-${Date.now()}-`),
                 url: publicUrl,
             });
         });
+
         blobStream.end(req.file.buffer);
     } catch (err) {
+        console.log(err);
+    
+        if (err.code == "LIMIT_FILE_SIZE") {
+          return res.status(500).send({
+            message: "File size cannot be larger than 5MB!",
+          });
+        }
+    
         res.status(500).send({
-            message: `Could not upload the file ${err}`,
+          message: `Could not upload the file ${err}`,
         });
-    }
-};
+      }
+    };
 
 export const getUploadFiles = async(req, res) =>{
     try {
@@ -58,7 +62,7 @@ export const getUploadFiles = async(req, res) =>{
     }
 };
 
-export const getListFiles = async (req, res) => {
+/* export const getListFiles = async (req, res) => {
     try {
         const [files] = await bucket.getFiles();
         let fileInfos = [];
@@ -78,4 +82,4 @@ export const getListFiles = async (req, res) => {
             message: "Unable to read list of files!",
         });
     }
-};
+}; */
