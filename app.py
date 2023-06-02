@@ -1,48 +1,55 @@
 from flask import Flask, request, jsonify
-import h5py
 import numpy as np
-from tensorflow import keras
-from PIL import Image
-import io
+import tensorflow as tf
+from keras.models import load_model
+from tensorflow.keras.preprocessing.image import load_img,img_to_array
+import tempfile
 
 app = Flask(__name__)
 
-model = None  # Global variable to store the model
+model = load_model('ML/Model/Model.h5')
 
-def load_model():
-    global model
-    model = keras.models.load_model('Model.h5')
-
-load_model()  # Load the model when the application starts
-
-@app.route('/predict', methods=['GET', 'POST'])
+@app.route('/predict', methods=['POST'])
 def predict():
-    if request.method == 'POST':
-        # Get the uploaded image from the request
-        uploaded_file = request.files['file']
+    class_names = ['BrownSpot', 'Healthy', 'Hispa', 'LeafBlast']
+    # Get the uploaded image from the request
+    if 'file' not in request.files:
+        return 'No file part in the request'
+    
+    file = request.files['file']
 
-        # Read and preprocess the image
-        image = Image.open(uploaded_file)
-        image = image.resize((256, 256))  # Resize the image if necessary
-        image = np.array(image) / 255.0  # Normalize the image pixels
-        image = np.expand_dims(image, axis=0)  # Add an extra dimension
+    if file.filename == '':
+        return 'No selected file'
 
-        # Perform the prediction using the loaded model
-        prediction = model.predict(image)
+    # Save file to temp folder
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    file.save(temp_file.name)
 
-        # Get the predicted class and confidence score
-        predicted_class = np.argmax(prediction)
-        confidence = prediction[0][predicted_class]
+    # Read and preprocess the image
+    image = load_img(temp_file.name,target_size=(224,224,3))
+    x = img_to_array(image)
+    x = x/255.0
+    x = np.expand_dims(x, axis=0)
+    images = np.vstack([x])
 
-        # Map the predicted class index to the class names
-        class_names = ['brownspot', 'healthy', 'hispa', 'leafblast']
-        predicted_class_name = class_names[predicted_class]
+    # Perform the prediction using the loaded model
+    pred = model.predict(images)
 
-        # Return the prediction result as a JSON response
-        result = {'predicted_class': predicted_class_name, 'confidence': float(confidence)}
-        return jsonify(result)
-    elif request.method == 'GET':
-        return jsonify(result)
+    # Get the predicted class and confidence score
+    if np.max(pred) > 0.6:
+        conf = round(np.max(pred)*100)
+        pred = class_names[np.argmax(pred)]
+    else:
+        conf = round(np.max(pred)*100) 
+        pred = "Label is Unknown"
+
+    # Return the prediction result as a JSON response
+    result = {
+        'predicted_class': pred, 
+        'confidence': str(conf) + '%'
+        }
+    
+    return jsonify(result)
 
 if __name__ == '__main__':
     app.run(debug=True)
