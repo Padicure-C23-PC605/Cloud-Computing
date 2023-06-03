@@ -7,19 +7,34 @@ import tempfile
 import h5py
 import gcsfs
 from google.cloud import storage
-from google.oauth2 import service_account
 import uuid
+import mysql.connector
+import requests
+
 
 app = Flask(__name__)
+# Config Database (incase kalo butuh)
+try:
+    mydb = mysql.connector.connect(
+  host = "localhost",
+  user = "root",
+  password = "",
+  database = "padicure_db"
+)
+    print(mydb)
+    mycursor = mydb.cursor()
+except OSError as e:
+    print(e)
 
+# Get Model from Google Cloud Storage
 PROJECT_NAME = 'capstone-project'
 CREDENTIALS = 'gcloud.json'
-# MODEL_PATH = 'gs://contoh_padicure/model/Model.h5'
-# FS = gcsfs.GCSFileSystem(project=PROJECT_NAME, token=CREDENTIALS)
-# with FS.open(MODEL_PATH, 'rb') as model_file:
-#      model_gcs = h5py.File(model_file, 'r')
+MODEL_PATH = 'gs://contoh_padicure/model/Model.h5'
+FS = gcsfs.GCSFileSystem(project=PROJECT_NAME, token=CREDENTIALS)
+with FS.open(MODEL_PATH, 'rb') as model_file:
+     model_gcs = h5py.File(model_file, 'r')
 
-model = load_model('Model.h5')
+model = load_model(model_gcs)
 
 client = storage.Client.from_service_account_json(CREDENTIALS)
 
@@ -35,10 +50,9 @@ def predict():
     file = request.files['file']
 
     if file.filename == '':
-        return 'No selected file'
-    
+        return 'No selected file'   
 
-    # Save file to temp folder
+    # Save file to temp folder & Upload to Google Cloud Storage
     id1 = uuid.uuid1()
     s = str(id1)
     temp_file = tempfile.NamedTemporaryFile(delete=False)
@@ -66,15 +80,26 @@ def predict():
         conf = round(np.max(pred)*100) 
         pred = "Label is Unknown"
 
+    # Insert image url to sql
+    sql = "INSERT INTO upload (id, image, createdAt, updatedAt) VALUES (%s, %s, %s, %s)"
+    val = ('',image_url,'','')
+ 
+    mycursor.execute(sql, val)
+    mydb.commit()
+ 
+    print(mycursor.rowcount, "details inserted")
+ 
+    # Disconnecting from server
+    mydb.close()
+
     # Return the prediction result as a JSON response
     result = {
         'predicted_class': pred, 
         'confidence': str(conf) + '%',
         'image_url' :image_url
         }
-    
+   
     return jsonify(result)
-    
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(port = 5000, debug=True)

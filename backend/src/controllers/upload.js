@@ -1,4 +1,17 @@
-import { format } from "util";
+/* import request from "request"
+
+export const predict = async (req, res) => {
+    request('http://127.0.0.1:5000/predict', function (error, response, body) {
+        console.error('error:', error); // Print the error
+        console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+        console.log('body:', body); // Print the data received
+        const data = req.body;
+        console.log(data);
+        res.status(200).send({message: 'berhasil'});
+    });
+} */
+
+/* import { format } from "util";
 import { uploadGoogleStorage, bucket } from "../middlewares/multer.js";
 import uploadFromUser from "../models/upload.js";
 import { getAuth, onAuthStateChanged } from "@firebase/auth";
@@ -62,7 +75,7 @@ export const getUploadFiles = async(req, res) =>{
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
-
+ */
 /* const auth = getAuth();
 onAuthStateChanged(auth, (user) => {
     if (user) {
