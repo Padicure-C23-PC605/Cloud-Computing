@@ -35,6 +35,8 @@ def predict():
     # Perform the prediction using the loaded model
     pred = model.predict(images)
 
+    temp_file.close()
+    
     # Get the predicted class and confidence score
     if np.max(pred) > 0.6:
         conf = round(np.max(pred)*100)
