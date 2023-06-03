@@ -39,14 +39,15 @@ def predict():
     
 
     # Save file to temp folder
-    # temp_file = tempfile.NamedTemporaryFile(delete=False)
-    # file.save(temp_file.name)
-    blob = bucket.blob('public/uploads/'+ file.name)
-    blob.upload_from_filename(file.name)
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    file.save(temp_file.name)
+    blob = bucket.blob('pic/profile/' + file.filename)
+    blob.cache_control = 'no-cache'
+    blob.upload_from_filename(temp_file.name)
     image_url = blob.public_url
-
+    
     # Read and preprocess the image
-    image = load_img(file.name,target_size=(224,224,3))
+    image = load_img(temp_file.name,target_size=(224,224,3))
     x = img_to_array(image)
     x = x/255.0
     x = np.expand_dims(x, axis=0)
