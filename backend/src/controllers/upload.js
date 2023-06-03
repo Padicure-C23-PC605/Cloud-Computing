@@ -1,6 +1,7 @@
 import { format } from "util";
 import { uploadGoogleStorage, bucket } from "../middlewares/multer.js";
 import uploadFromUser from "../models/upload.js";
+import { getAuth, onAuthStateChanged } from "@firebase/auth";
 
 export const upload = async (req, res) => {
     try {   
@@ -61,6 +62,19 @@ export const getUploadFiles = async(req, res) =>{
         res.status(500).json({ message: "Internal Server Error" });
     }
 };
+
+/* const auth = getAuth();
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log('user logged in: ', user);
+        db.collection('guides').get().then(snapshot => {
+          setupGuides(snapshot.docs);
+        });
+      } else {
+        console.log('user logged out');
+        setupGuides([]);
+      }
+    }) */
 
 /* export const getListFiles = async (req, res) => {
     try {
