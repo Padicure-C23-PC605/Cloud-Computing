@@ -7,7 +7,7 @@ import tempfile
 
 app = Flask(__name__)
 
-model = load_model('ML/Model/Model.h5')
+model = load_model('Model.h5')
 
 @app.route('/predict', methods=['POST'])
 def predict():
