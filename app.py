@@ -19,7 +19,7 @@ CREDENTIALS = 'gcloud.json'
 # with FS.open(MODEL_PATH, 'rb') as model_file:
 #      model_gcs = h5py.File(model_file, 'r')
 
-model = load_model('Model.h5')
+model = load_model("Model.h5")
 
 client = storage.Client.from_service_account_json(CREDENTIALS)
 
@@ -41,7 +41,7 @@ def predict():
     # Save file to temp folder
     # temp_file = tempfile.NamedTemporaryFile(delete=False)
     # file.save(temp_file.name)
-    blob = bucket.blob('public/uploads/'+ file.filename)
+    blob = bucket.blob('public/uploads/'+ file.name)
     blob.upload_from_filename(file.name)
     image_url = blob.public_url
 
