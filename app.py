@@ -8,7 +8,7 @@ import h5py
 import gcsfs
 from google.cloud import storage
 from google.oauth2 import service_account
-
+import uuid
 
 app = Flask(__name__)
 
@@ -39,14 +39,17 @@ def predict():
     
 
     # Save file to temp folder
-    # temp_file = tempfile.NamedTemporaryFile(delete=False)
-    # file.save(temp_file.name)
-    blob = bucket.blob('public/uploads/'+ file.filename)
-    blob.upload_from_filename(file.name)
+    id1 = uuid.uuid1()
+    s = str(id1)
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    file.save(temp_file.name)
+    blob = bucket.blob('public/uploads/padicure-' + s + '-' + file.filename)
+    blob.cache_control = 'no-cache'
+    blob.upload_from_filename(temp_file.name, content_type='image')
     image_url = blob.public_url
 
     # Read and preprocess the image
-    image = load_img(file.name,target_size=(224,224,3))
+    image = load_img(temp_file.name,target_size=(224,224,3))
     x = img_to_array(image)
     x = x/255.0
     x = np.expand_dims(x, axis=0)
