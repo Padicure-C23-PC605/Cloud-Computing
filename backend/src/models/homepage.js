@@ -13,7 +13,6 @@ const item = db.define('item', {
 });
 
 
-
 export default item;
 
 (async()=>{
