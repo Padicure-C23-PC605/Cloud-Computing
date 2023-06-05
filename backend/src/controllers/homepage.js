@@ -1,5 +1,3 @@
-//blm fix
-
 import item from "../models/homepage.js";
 
 export const getPadi = async (req, res) => {

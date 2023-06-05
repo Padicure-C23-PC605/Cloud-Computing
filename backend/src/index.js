@@ -13,16 +13,10 @@ app.use (cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: true}));
 
-/* app.get("/", (req, res) => {
-    res.send("Welcome to Padicure API");
-}) */
-
-//hapus
 app.get("/", (req, res) => {
-    res.sendFile('index.html', { root: path.join(__dirname, '../templates') });
-    next(err)
+    res.send("Welcome to Padicure API");
 })
-//-------------------------
+
 app.use(router);
 
 app.listen(4000, () => {

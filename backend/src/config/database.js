@@ -1,9 +1,9 @@
 import { Sequelize } from "sequelize";
-//connect database
 
-//connect to mysql gcp
-const db = new Sequelize('padicure_db', 'root', '', {
-    host: 'localhost',
+
+// Connect to MySQL GCP
+const db = new Sequelize('padicure_db', 'root', 'root', {
+    host: '34.128.75.27',
     dialect: "mysql"
 })
 
