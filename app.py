@@ -2,43 +2,42 @@ from flask import Flask, request, jsonify
 import numpy as np
 import tensorflow as tf
 from keras.models import load_model
-from tensorflow.keras.preprocessing.image import load_img,img_to_array
+from keras_preprocessing.image import load_img,img_to_array
 import tempfile
 import h5py
 import gcsfs
 from google.cloud import storage
 import uuid
 import mysql.connector
-import requests
 
 
 app = Flask(__name__)
 # Config Database (incase kalo butuh)
 try:
     mydb = mysql.connector.connect(
-  host = "localhost",
+  host = "34.101.67.98",
   user = "root",
-  password = "",
+  password = "root",
   database = "padicure_db"
 )
     print(mydb)
     mycursor = mydb.cursor()
+
 except OSError as e:
     print(e)
 
 # Get Model from Google Cloud Storage
-PROJECT_NAME = 'capstone-project'
-CREDENTIALS = 'gcloud.json'
-MODEL_PATH = 'gs://contoh_padicure/model/Model.h5'
+PROJECT_NAME = 'capstone-padicure'
+CREDENTIALS = 'credentials.json'
+MODEL_PATH = 'gs://cs_padicure/model/Model.h5'
 FS = gcsfs.GCSFileSystem(project=PROJECT_NAME, token=CREDENTIALS)
 with FS.open(MODEL_PATH, 'rb') as model_file:
      model_gcs = h5py.File(model_file, 'r')
-
-model = load_model(model_gcs)
+     model = load_model(model_gcs)
 
 client = storage.Client.from_service_account_json(CREDENTIALS)
 
-bucket = storage.Bucket(client, 'contoh_padicure')
+bucket = storage.Bucket(client, 'cs_padicure')
 
 @app.route('/predict', methods=['POST'])
 def predict():
@@ -52,11 +51,15 @@ def predict():
     if file.filename == '':
         return 'No selected file'   
 
-    # Save file to temp folder & Upload to Google Cloud Storage
-    id1 = uuid.uuid1()
-    s = str(id1)
+    # Save file to temp folder   
     temp_file = tempfile.NamedTemporaryFile(delete=False)
     file.save(temp_file.name)
+
+    # Create unique value to rename file name
+    id1 = uuid.uuid1()
+    s = str(id1)
+
+    # Upload to Google Cloud Storage
     blob = bucket.blob('public/uploads/padicure-' + s + '-' + file.filename)
     blob.cache_control = 'no-cache'
     blob.upload_from_filename(temp_file.name, content_type='image')
@@ -81,14 +84,33 @@ def predict():
         pred = "Label is Unknown"
 
     # Insert image url to sql
-    sql = "INSERT INTO upload (id, image, createdAt, updatedAt) VALUES (%s, %s, %s, %s)"
-    val = ('',image_url,'','')
+    sql = "INSERT INTO upload (image) VALUES (%s)"
+    val = (image_url)
  
-    mycursor.execute(sql, val)
-    mydb.commit()
- 
-    print(mycursor.rowcount, "details inserted")
- 
+    mycursor.execute(sql, (val,))
+    mydb.commit()  
+
+    # Get value using if the pred is one of the class
+    if pred == 'BrownSpot':
+        query = "SELECT howtocure FROM item where id=1"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'Healthy':
+        query = "SELECT howtocure FROM item where id=2"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'Hispa':
+        query = "SELECT howtocure FROM item where id=3"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'LeafBlast':
+        query = "SELECT howtocure FROM item where id=4"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
     # Disconnecting from server
     mydb.close()
 
@@ -96,7 +118,8 @@ def predict():
     result = {
         'predicted_class': pred, 
         'confidence': str(conf) + '%',
-        'image_url' :image_url
+        'image_url' :image_url,
+        'howtocure' :queryresult
         }
    
     return jsonify(result)
