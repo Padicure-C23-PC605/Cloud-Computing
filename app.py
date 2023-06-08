@@ -9,15 +9,15 @@ import gcsfs
 from google.cloud import storage
 import uuid
 import mysql.connector
-
+import os
 
 app = Flask(__name__)
 # Config Database (incase kalo butuh)
 try:
     mydb = mysql.connector.connect(
-  host = "34.101.67.98",
+  host = "",
   user = "root",
-  password = "root",
+  password = "",
   database = "padicure_db"
 )
     print(mydb)
@@ -129,5 +129,5 @@ def predict():
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(port = 5000, debug=True)
+    app.run(port=int(os.environ.get('PORT', 5000)), debug=True)
     print('Server is running on port 5000')
