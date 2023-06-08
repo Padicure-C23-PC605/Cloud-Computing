@@ -39,6 +39,10 @@ client = storage.Client.from_service_account_json(CREDENTIALS)
 
 bucket = storage.Bucket(client, 'cs_padicure')
 
+@app.route('/', methods=['GET'])
+def hello():
+    return "Hello World!"
+
 @app.route('/predict', methods=['POST'])
 def predict():
     class_names = ['BrownSpot', 'Healthy', 'Hispa', 'LeafBlast']
@@ -126,3 +130,4 @@ def predict():
 
 if __name__ == '__main__':
     app.run(port = 5000, debug=True)
+    print('Server is running on port 5000')
