@@ -9,9 +9,11 @@ import gcsfs
 from google.cloud import storage
 import uuid
 import mysql.connector
-
+import os
+from PIL import Image
 
 app = Flask(__name__)
+
 # Config Database (incase kalo butuh)
 try:
     mydb = mysql.connector.connect(
@@ -38,11 +40,10 @@ with FS.open(MODEL_PATH, 'rb') as model_file:
 client = storage.Client.from_service_account_json(CREDENTIALS)
 
 bucket = storage.Bucket(client, 'cs_padicure')
-
 @app.route('/', methods=['GET'])
 def hello():
     return "Hello World!"
-
+    
 @app.route('/predict', methods=['POST'])
 def predict():
     class_names = ['BrownSpot', 'Healthy', 'Hispa', 'LeafBlast']
@@ -79,7 +80,8 @@ def predict():
     # Perform the prediction using the loaded model
     pred = model.predict(images)
 
-    # Get the predicted class and confidence score
+
+# Get the predicted class and confidence score
     if np.max(pred) > 0.6:
         conf = round(np.max(pred)*100)
         pred = class_names[np.argmax(pred)]
@@ -92,9 +94,9 @@ def predict():
     val = (image_url)
  
     mycursor.execute(sql, (val,))
-    mydb.commit()  
+      
 
-    # Get value using if the pred is one of the class
+# Get value using if the pred is one of the class
     if pred == 'BrownSpot':
         query = "SELECT howtocure FROM item where id=1"
         mycursor.execute(query)
@@ -114,7 +116,9 @@ def predict():
         query = "SELECT howtocure FROM item where id=4"
         mycursor.execute(query)
         queryresult = mycursor.fetchone()
-
+    
+    mydb.commit()
+    
     # Disconnecting from server
     mydb.close()
 
@@ -123,11 +127,10 @@ def predict():
         'predicted_class': pred, 
         'confidence': str(conf) + '%',
         'image_url' :image_url,
-        'howtocure' :queryresult
+        'how_to_cure': queryresult
         }
    
     return jsonify(result)
 
-if __name__ == '_main_':
-    app.run(host='0.0.0.0', port=5000)
-    print('Server is running on port 5000')
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
