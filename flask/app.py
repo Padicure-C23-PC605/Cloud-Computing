@@ -1,45 +1,136 @@
 from flask import Flask, request, jsonify
-import h5py
 import numpy as np
-from tensorflow import keras
+import tensorflow as tf
+from keras.models import load_model
+from keras_preprocessing.image import load_img,img_to_array
+import tempfile
+import h5py
+import gcsfs
+from google.cloud import storage
+import uuid
+import mysql.connector
+import os
 from PIL import Image
-import io
 
 app = Flask(__name__)
 
-model = None  # Global variable to store the model
+# Config Database (incase kalo butuh)
+try:
+    mydb = mysql.connector.connect(
+  host = "",
+  user = "root",
+  password = "",
+  database = ""
+)
+    print(mydb)
+    mycursor = mydb.cursor()
 
-def load_model():
-    global model
-    model = keras.models.load_model('Model.h5')
+except OSError as e:
+    print(e)
 
-load_model()  # Load the model when the application starts
+# Get Model from Google Cloud Storage
+PROJECT_NAME = 'capstone-padicure'
+CREDENTIALS = 'credentials.json'
+MODEL_PATH = 'gs://cs_padicure/model/Model.h5'
+FS = gcsfs.GCSFileSystem(project=PROJECT_NAME, token=CREDENTIALS)
+with FS.open(MODEL_PATH, 'rb') as model_file:
+     model_gcs = h5py.File(model_file, 'r')
+     model = load_model(model_gcs)
 
+client = storage.Client.from_service_account_json(CREDENTIALS)
+
+bucket = storage.Bucket(client, 'cs_padicure')
+@app.route('/', methods=['GET'])
+def hello():
+    return "Hello World!"
+    
 @app.route('/predict', methods=['POST'])
 def predict():
+    class_names = ['BrownSpot', 'Healthy', 'Hispa', 'LeafBlast']
     # Get the uploaded image from the request
-    uploaded_file = request.files['file']
+    if 'file' not in request.files:
+        return 'No file part in the request'
+    
+    file = request.files['file']
+
+    if file.filename == '':
+        return 'No selected file'   
+
+    # Save file to temp folder   
+    temp_file = tempfile.NamedTemporaryFile(delete=False)
+    file.save(temp_file.name)
+
+    # Create unique value to rename file name
+    id1 = uuid.uuid1()
+    s = str(id1)
+
+    # Upload to Google Cloud Storage
+    blob = bucket.blob('public/uploads/padicure-' + s + '-' + file.filename)
+    blob.cache_control = 'no-cache'
+    blob.upload_from_filename(temp_file.name, content_type='image')
+    image_url = blob.public_url
 
     # Read and preprocess the image
-    image = Image.open(uploaded_file)
-    image = image.resize((256, 256))  # Resize the image if necessary
-    image = np.array(image) / 255.0  # Normalize the image pixels
-    image = np.expand_dims(image, axis=0)  # Add an extra dimension
+    image = load_img(temp_file.name,target_size=(224,224,3))
+    x = img_to_array(image)
+    x = x/255.0
+    x = np.expand_dims(x, axis=0)
+    images = np.vstack([x])
 
     # Perform the prediction using the loaded model
-    prediction = model.predict(image)
+    pred = model.predict(images)
 
-    # Get the predicted class and confidence score
-    predicted_class = np.argmax(prediction)
-    confidence = prediction[0][predicted_class]
 
-    # Map the predicted class index to the class names
-    class_names = ['brownspot', 'healthy', 'hispa', 'leafblast']
-    predicted_class_name = class_names[predicted_class]
+# Get the predicted class and confidence score
+    if np.max(pred) > 0.6:
+        conf = round(np.max(pred)*100)
+        pred = class_names[np.argmax(pred)]
+    else:
+        conf = round(np.max(pred)*100) 
+        pred = "Label is Unknown"
+
+    # Insert image url to sql
+    sql = "INSERT INTO upload (image) VALUES (%s)"
+    val = (image_url)
+ 
+    mycursor.execute(sql, (val,))
+      
+
+# Get value using if the pred is one of the class
+    if pred == 'BrownSpot':
+        query = "SELECT howtocure FROM item where id=1"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'Healthy':
+        query = "SELECT howtocure FROM item where id=2"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'Hispa':
+        query = "SELECT howtocure FROM item where id=3"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+
+    elif pred == 'LeafBlast':
+        query = "SELECT howtocure FROM item where id=4"
+        mycursor.execute(query)
+        queryresult = mycursor.fetchone()
+    
+    mydb.commit()
+    
+    # Disconnecting from server
+    mydb.close()
 
     # Return the prediction result as a JSON response
-    result = {'predicted_class': predicted_class_name, 'confidence': float(confidence)}
+    result = {
+        'predicted_class': pred, 
+        'confidence': str(conf) + '%',
+        'image_url' :image_url,
+        'how_to_cure': queryresult
+        }
+   
     return jsonify(result)
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 5000)), debug=True)
