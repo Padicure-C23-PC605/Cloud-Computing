@@ -5,12 +5,12 @@ export const getPadi = async (req, res) => {
         const response = await item.findAll({
             attributes: ["id", "name", "image"],
         });
-        res.json(response);
+        res.json({response});
     }
     catch (error) {
         console.log(error);
-        res.status(500).json({ message: "Internal Server Error" });
-    }
+        res.status(500).json({ message: "Internal Server Error" });
+    }
 }
 
 export const detail = async (req, res) => {
