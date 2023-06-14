@@ -64,5 +64,7 @@ https://predict-dqo6vd65jq-et.a.run.app/predict
     "description": "ini Brown Spot",
     "howtocure": "- Use resistant varieties. \r\n- Contact your local agriculture office for up-to-date lists of varieties available.\r\n- Use fungicides (e.g., iprodione, propiconazole, azoxystrobin, trifloxystrobin, and carbendazim) as seed treatments.\r\n- Treat seeds with hot water (53−54°C) for 10−12 minutes before planting, to control primary infection at the seedling stage. To increase effectiveness of treatment, pre-soak seeds in cold water for eight hours."
 }
-    ```
-(Ini Gambar)
+    ```  
+    (Ini Gambar)
+    
+ 
