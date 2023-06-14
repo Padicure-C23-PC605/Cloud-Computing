@@ -83,7 +83,7 @@ https://predict-dqo6vd65jq-et.a.run.app/predict
     > 200 OK
     ```json
     {
-            "confidence": "100%",
+    "confidence": "100%",
     "image_url": "https://storage.googleapis.com/cs_padicure/public/uploads/padicure-3369b424-0aa9-11ee-b7bb-5bfa351ac0ed-WhatsApp%20Image%202023-06-07%20at%2021.40.02.jpeg",
     "predicted_class": "BrownSpot"
         }
