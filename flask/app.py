@@ -20,7 +20,7 @@ try:
   host = "",
   user = "root",
   password = "",
-  database = ""
+  database = "padicure_db"
 )
     print(mydb)
     mycursor = mydb.cursor()
@@ -97,37 +97,36 @@ def predict():
       
 
 # Get value using if the pred is one of the class
-    if pred == 'BrownSpot':
-        query = "SELECT howtocure FROM item where id=1"
-        mycursor.execute(query)
-        queryresult = mycursor.fetchone()
+#    if pred == 'BrownSpot':
+#        query = "SELECT howtocure FROM item where id=1"
+#        mycursor.execute(query)
+#        queryresult = mycursor.fetchone()
 
-    elif pred == 'Healthy':
-        query = "SELECT howtocure FROM item where id=2"
-        mycursor.execute(query)
-        queryresult = mycursor.fetchone()
+#    elif pred == 'Healthy':
+#        query = "SELECT howtocure FROM item where id=2"
+#        mycursor.execute(query)
+#        queryresult = mycursor.fetchone()
 
-    elif pred == 'Hispa':
-        query = "SELECT howtocure FROM item where id=3"
-        mycursor.execute(query)
-        queryresult = mycursor.fetchone()
+#    elif pred == 'Hispa':
+#        query = "SELECT howtocure FROM item where id=3"
+#        mycursor.execute(query)
+#        queryresult = mycursor.fetchone()
 
-    elif pred == 'LeafBlast':
-        query = "SELECT howtocure FROM item where id=4"
-        mycursor.execute(query)
-        queryresult = mycursor.fetchone()
+#    elif pred == 'LeafBlast':
+#        query = "SELECT howtocure FROM item where id=4"
+#        mycursor.execute(query)
+#        queryresult = mycursor.fetchone()
     
     mydb.commit()
     
     # Disconnecting from server
-    mydb.close()
+    # mydb.close()
 
     # Return the prediction result as a JSON response
     result = {
         'predicted_class': pred, 
         'confidence': str(conf) + '%',
-        'image_url' :image_url,
-        'how_to_cure': queryresult
+        'image_url' :image_url
         }
    
     return jsonify(result)
