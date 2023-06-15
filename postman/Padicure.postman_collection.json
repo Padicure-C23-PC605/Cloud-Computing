@@ -1,0 +1,94 @@
+{
+	"info": {
+		"_postman_id": "9d8198bc-338b-462d-931a-a2557f37a7b9",
+		"name": "Padicure",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Homepage",
+			"item": [
+				{
+					"name": "Homepage",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://home-dqo6vd65jq-et.a.run.app/homepage",
+							"protocol": "https",
+							"host": [
+								"home-dqo6vd65jq-et",
+								"a",
+								"run",
+								"app"
+							],
+							"path": [
+								"homepage"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detail 1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "https://home-dqo6vd65jq-et.a.run.app/detail/1",
+							"protocol": "https",
+							"host": [
+								"home-dqo6vd65jq-et",
+								"a",
+								"run",
+								"app"
+							],
+							"path": [
+								"detail",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detail 2",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Detail 3",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				},
+				{
+					"name": "Detail 4",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Predict",
+			"item": [
+				{
+					"name": "Predict",
+					"request": {
+						"method": "POST",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
