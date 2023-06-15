@@ -47,7 +47,8 @@ https://predict-dqo6vd65jq-et.a.run.app/predict
         }
     }
     ```
-(Ini Gambar)    
+![](postman/homepage.png)  
+
     
 ### Detail:
 * URL
@@ -66,7 +67,8 @@ https://predict-dqo6vd65jq-et.a.run.app/predict
     "howtocure": "- Use resistant varieties. \r\n- Contact your local agriculture office for up-to-date lists of varieties available.\r\n- Use fungicides (e.g., iprodione, propiconazole, azoxystrobin, trifloxystrobin, and carbendazim) as seed treatments.\r\n- Treat seeds with hot water (53−54°C) for 10−12 minutes before planting, to control primary infection at the seedling stage. To increase effectiveness of treatment, pre-soak seeds in cold water for eight hours."  
     }
     ```    
-(Ini Gambar)   
+![](postman/detail1.png)  
+
 
 
 ### Padicure Predict API
@@ -89,7 +91,7 @@ https://predict-dqo6vd65jq-et.a.run.app/predict
     "predicted_class": "BrownSpot"
     }
     ```
-(Ini Gambar)    
+![](postman/predict.png)      
     
     
  
