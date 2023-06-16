@@ -94,6 +94,7 @@ def predict():
     val = (image_url)
  
     mycursor.execute(sql, (val,))
+    mydb.commit()
       
 
 # Get value using if the pred is one of the class
@@ -119,7 +120,7 @@ def predict():
     else:
         queryresult = "Label is Unknown"
     
-    mydb.commit()
+    
     
     # Disconnecting from server
      mydb.close()
